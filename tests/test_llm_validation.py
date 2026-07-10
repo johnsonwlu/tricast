@@ -1,4 +1,7 @@
-from stock_scenarios.llm.analyst import enforce_bounds, inputs_hash
+import json
+from unittest.mock import patch
+
+from stock_scenarios.llm.analyst import analyze, enforce_bounds, inputs_hash
 
 
 def test_within_bounds_passes_through():
@@ -27,6 +30,44 @@ def test_unrecoverable_falls_back_to_priors():
 def test_exact_priors_unchanged():
     tilted = {"bear": 15, "base": 50, "bull": 35}
     assert enforce_bounds(dict(tilted), tilted) == tilted
+
+
+class FakeOllamaResponse:
+    def __init__(self, body: dict):
+        self._body = body
+
+    def raise_for_status(self):
+        pass
+
+    def json(self):
+        return self._body
+
+
+def test_ollama_provider_parses_and_clamps():
+    llm_json = json.dumps({
+        "bear": {"probability_pct": 60, "narrative": "Recession hits."},
+        "base": {"probability_pct": 30, "narrative": "Muddle through."},
+        "bull": {"probability_pct": 10, "narrative": "AI supercycle."},
+        "advice": "hold",
+        "advice_reasoning": "Valuation is stretched.",
+        "key_risks": ["rates", "competition"],
+    })
+    fake = FakeOllamaResponse({"message": {"content": llm_json}})
+    payload = {"tilted_probabilities": {"bear": 29, "base": 50, "bull": 21}}
+
+    with patch("stock_scenarios.llm.analyst.requests.post", return_value=fake) as post:
+        result = analyze(payload, provider="ollama")
+
+    assert post.called
+    body = post.call_args.kwargs["json"]
+    assert "format" in body and body["stream"] is False
+    probs = {k: v["probability_pct"] for k, v in result["scenarios"].items()}
+    assert sum(probs.values()) == 100
+    for k in probs:  # clamped to ±10pp of the tilted prior
+        assert abs(probs[k] - payload["tilted_probabilities"][k]) <= 10
+    assert result["advice"] == "hold"
+    assert result["cost_usd"] == 0.0
+    assert result["model"].startswith("ollama/")
 
 
 def test_inputs_hash_deterministic_and_order_insensitive():

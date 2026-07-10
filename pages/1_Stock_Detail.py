@@ -103,7 +103,14 @@ if c1.button("🔄 Refresh data (free)"):
     ui.cached_report.clear()
     ui.cached_macro_state.clear()
     st.rerun()
-if c2.button("🤖 Re-run analysis (~$0.03, calls Claude)"):
+from stock_scenarios import config
+
+llm_label = (
+    f"🤖 Re-run analysis (local {config.OLLAMA_MODEL}, free)"
+    if config.LLM_PROVIDER == "ollama"
+    else "🤖 Re-run analysis (~$0.03, calls Claude)"
+)
+if c2.button(llm_label):
     from stock_scenarios import pipeline
     with st.spinner("Running Claude analysis…"):
         try:

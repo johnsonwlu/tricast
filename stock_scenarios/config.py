@@ -1,9 +1,13 @@
 """Central knobs for the scenario engine. Everything tunable lives here."""
 
+import os
 from pathlib import Path
+
+from dotenv import load_dotenv
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DB_PATH = PROJECT_ROOT / "data" / "cache.db"
+load_dotenv(PROJECT_ROOT / ".env")  # must run before any os.environ reads below
 
 # --- Quant model ---
 LOOKBACK_YEARS = 5
@@ -33,7 +37,12 @@ REGIME_CONTRACTIONARY = -0.3    # composite score <= this
 TILT_MAX_PP = 10                # max bull/bear probability shift, percentage points
 
 # --- LLM ---
-MODEL_ID = "claude-sonnet-4-6"  # flip to "claude-fable-5" for deeper analysis
+# Provider: "ollama" (local, free, no key) or "anthropic" (paid API key).
+# Override via LLM_PROVIDER in .env.
+LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "ollama")
+MODEL_ID = "claude-sonnet-4-6"  # anthropic model; flip to "claude-fable-5" for deeper analysis
+OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
+OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen3")
 MAX_TOKENS = 4000
 LLM_ADJUST_MAX_PP = 10          # LLM may move each probability at most this far
 

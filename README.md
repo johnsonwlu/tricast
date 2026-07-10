@@ -13,20 +13,30 @@ How a report is built:
 2. **Macro layer** — FRED indicators (yield curve, CPI, unemployment, Fed
    funds) plus VIX produce a regime score in [−1, +1] that shifts bull/bear
    probabilities by up to ±10pp.
-3. **LLM layer** — Claude writes the scenario narratives, may adjust
+3. **LLM layer** — an LLM writes the scenario narratives, may adjust
    probabilities within ±10pp of the tilted priors (enforced in code), and
    gives advice. The output schema contains no price fields, so the model
-   cannot invent targets. Analyses are cached by input hash; a fresh one costs
-   roughly $0.02–0.03 and only runs when you click "Re-run analysis".
+   cannot invent targets. Two providers (set `LLM_PROVIDER` in `.env`):
+   - `ollama` (default) — local model via Ollama's structured-output API.
+     Free, no key, no rate limits. Set `OLLAMA_MODEL` (e.g. `qwen3`) and
+     `OLLAMA_HOST` if it runs on another machine.
+   - `anthropic` — Claude API; ~$0.02–0.03 per analysis, needs
+     `ANTHROPIC_API_KEY`.
+
+   Analyses are cached by input hash (including which model produced them)
+   and only run when you click "Re-run analysis".
 
 ## Setup
 
 ```sh
 cd ~/stock-scenarios
-cp .env.example .env   # then fill in the two keys:
-#   ANTHROPIC_API_KEY — https://console.anthropic.com/
-#   FRED_API_KEY      — https://fred.stlouisfed.org/docs/api/api_key.html (free)
+cp .env.example .env   # defaults to local Ollama; optionally add:
+#   FRED_API_KEY      — free, enables the macro tilt
+#   ANTHROPIC_API_KEY — only if you set LLM_PROVIDER=anthropic
 ```
+
+For the default local LLM path, install [Ollama](https://ollama.com) and pull
+a model, e.g. `ollama pull qwen3`.
 
 The venv is already created at `.venv` (Python 3.13). To recreate:
 

@@ -110,7 +110,10 @@ def _llm_payload(report: dict) -> dict:
 
 def _get_or_run_analysis(ticker: str, report: dict, db_path) -> dict:
     payload = _llm_payload(report)
-    h = analyst.inputs_hash(payload)
+    # cache key covers the provider/model too, so switching LLMs re-analyzes
+    llm_id = (config.LLM_PROVIDER, config.OLLAMA_MODEL
+              if config.LLM_PROVIDER == "ollama" else config.MODEL_ID)
+    h = analyst.inputs_hash({"payload": payload, "llm": llm_id})
     cached = store.analysis_get(ticker, h, db_path=db_path)
     if cached:
         log.info("analysis cache hit: %s (%s)", ticker, h[:8])
