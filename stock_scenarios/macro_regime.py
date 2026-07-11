@@ -58,16 +58,18 @@ def signal_vix(vix: float) -> int:
 
 def compute_signals(series: dict[str, pd.Series], vix: float) -> list[IndicatorSignal]:
     """series: FRED series keyed by id (T10Y2Y, CPIAUCSL, UNRATE, FEDFUNDS)."""
-    t10y2y = float(series["T10Y2Y"].iloc[-1])
+    # round before scoring so displayed values and signals always agree
+    # (raw float subtraction can yield -0.0999... vs the -0.1 threshold)
+    t10y2y = round(float(series["T10Y2Y"].iloc[-1]), 2)
 
     cpi = series["CPIAUCSL"]
-    cpi_yoy = float((cpi.iloc[-1] / cpi.iloc[-13] - 1) * 100)  # monthly series, 12m back
+    cpi_yoy = round(float((cpi.iloc[-1] / cpi.iloc[-13] - 1) * 100), 2)  # 12m back
 
     unrate = series["UNRATE"]
-    un_chg = float(unrate.iloc[-1] - unrate.iloc[-4])           # 3-month change
+    un_chg = round(float(unrate.iloc[-1] - unrate.iloc[-4]), 2)          # 3-month change
 
     ff = series["FEDFUNDS"]
-    ff_chg = float(ff.iloc[-1] - ff.iloc[-7])                   # 6-month change
+    ff_chg = round(float(ff.iloc[-1] - ff.iloc[-7]), 2)                  # 6-month change
 
     return [
         IndicatorSignal("Yield curve (10y-2y)", round(t10y2y, 2),
