@@ -55,8 +55,18 @@ without `FRED_API_KEY` reports run with a neutral macro regime; without
 .venv/bin/python scripts/run_analysis.py NVDA            # CLI report (free)
 .venv/bin/python scripts/run_analysis.py NVDA --llm      # + Claude analysis (paid)
 .venv/bin/python scripts/run_analysis.py NVDA --data-only
+.venv/bin/python scripts/score_predictions.py   # score matured predictions
 .venv/bin/pytest                        # offline test suite
 ```
+
+## Prediction ledger
+
+Every report logs its forecast (targets, bands, probabilities, regime, model)
+to a ledger — one row per ticker per day. Once a prediction's 12-month horizon
+passes, `scripts/score_predictions.py` (or the button on the Prediction Ledger
+page) classifies the actual outcome and computes a Brier score, so over time
+you learn whether the model's probabilities are actually calibrated — and
+whether they beat the naive always-25/50/25 baseline.
 
 ## Layout
 

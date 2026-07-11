@@ -7,7 +7,7 @@ analyses cache without an API call.
 
 import logging
 
-from stock_scenarios import config, macro_regime, store
+from stock_scenarios import config, ledger, macro_regime, store
 from stock_scenarios.data import macro as macro_data
 from stock_scenarios.data import market
 from stock_scenarios.llm import analyst
@@ -70,6 +70,7 @@ def build_report(ticker: str, run_llm: bool = False, db_path=config.DB_PATH) -> 
         if cached:
             report["analysis"] = cached
 
+    ledger.record_prediction(report, db_path=db_path)
     return report
 
 

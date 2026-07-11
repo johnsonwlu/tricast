@@ -41,6 +41,23 @@ CREATE TABLE IF NOT EXISTS analyses (
     report_json TEXT NOT NULL,
     PRIMARY KEY (ticker, inputs_hash)
 );
+CREATE TABLE IF NOT EXISTS predictions (
+    ticker TEXT NOT NULL,
+    pred_date TEXT NOT NULL,        -- one prediction per ticker per day
+    created_at REAL NOT NULL,
+    horizon_end TEXT NOT NULL,
+    spot REAL NOT NULL,
+    band_lower REAL NOT NULL,       -- P25 of terminal dist: below = bear happened
+    band_upper REAL NOT NULL,       -- P75 of terminal dist: above = bull happened
+    bear_target REAL, base_target REAL, bull_target REAL,
+    p_bear INTEGER NOT NULL, p_base INTEGER NOT NULL, p_bull INTEGER NOT NULL,
+    model TEXT, regime TEXT, macro_score REAL,
+    cone_json TEXT,                 -- percentile cone for interim tracking
+    outcome TEXT,                   -- NULL until matured: bear|base|bull
+    outcome_price REAL,
+    brier REAL,
+    PRIMARY KEY (ticker, pred_date)
+);
 """
 
 
