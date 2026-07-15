@@ -1,4 +1,4 @@
-# Stock Scenarios
+# Tricast
 
 Personal stock watchlist with **bull / base / bear scenario analysis**. For each
 stock it produces a 12-month price target per scenario with a probability of
@@ -73,7 +73,7 @@ whether they beat the naive always-25/50/25 baseline.
 ```
 app.py                    Watchlist page
 pages/                    Stock Detail (fan chart, scenario cards), Macro Regime
-stock_scenarios/          UI-free library
+tricast/                  UI-free library
   config.py               every tunable knob (horizon, percentiles, tilt, model)
   store.py                SQLite cache + watchlist + saved analyses
   data/                   yfinance + FRED with incremental/TTL caching

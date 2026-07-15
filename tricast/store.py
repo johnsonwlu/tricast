@@ -6,7 +6,7 @@ import time
 from contextlib import contextmanager
 from pathlib import Path
 
-from stock_scenarios import config
+from tricast import config
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS watchlist (

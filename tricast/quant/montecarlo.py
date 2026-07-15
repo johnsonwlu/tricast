@@ -9,7 +9,7 @@ since raw past drift is a poor forward estimate.
 import numpy as np
 import pandas as pd
 
-from stock_scenarios import config
+from tricast import config
 
 
 def compute_drift(returns: pd.Series, spot: float, analyst_target: float | None) -> float:

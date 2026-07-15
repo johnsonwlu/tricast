@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from stock_scenarios import config
-from stock_scenarios.quant import montecarlo
+from tricast import config
+from tricast.quant import montecarlo
 
 
 def make_closes(n=1300, daily_vol=0.02, seed=1):

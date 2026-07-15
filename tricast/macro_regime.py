@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 import pandas as pd
 
-from stock_scenarios import config
+from tricast import config
 
 
 @dataclass

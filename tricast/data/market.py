@@ -6,7 +6,7 @@ from datetime import date, timedelta
 import pandas as pd
 import yfinance as yf
 
-from stock_scenarios import config, store
+from tricast import config, store
 
 log = logging.getLogger(__name__)
 

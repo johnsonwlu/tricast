@@ -4,7 +4,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from stock_scenarios import store, ui
+from tricast import store, ui
 
 ui.page_setup("🔍 Stock Detail")
 
@@ -103,7 +103,7 @@ if c1.button("🔄 Refresh data (free)"):
     ui.cached_report.clear()
     ui.cached_macro_state.clear()
     st.rerun()
-from stock_scenarios import config
+from tricast import config
 
 llm_label = (
     f"🤖 Re-run analysis (local {config.OLLAMA_MODEL}, free)"
@@ -111,7 +111,7 @@ llm_label = (
     else "🤖 Re-run analysis (~$0.03, calls Claude)"
 )
 if c2.button(llm_label):
-    from stock_scenarios import pipeline
+    from tricast import pipeline
     with st.spinner("Running Claude analysis…"):
         try:
             pipeline.build_report(ticker, run_llm=True)

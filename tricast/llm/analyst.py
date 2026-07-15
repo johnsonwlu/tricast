@@ -12,8 +12,8 @@ import logging
 
 import requests
 
-from stock_scenarios import config
-from stock_scenarios.llm.schemas import StockAnalysis
+from tricast import config
+from tricast.llm.schemas import StockAnalysis
 
 log = logging.getLogger(__name__)
 

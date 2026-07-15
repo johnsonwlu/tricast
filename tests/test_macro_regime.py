@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from stock_scenarios import macro_regime
+from tricast import macro_regime
 
 PRIORS = {"bear": 25, "base": 50, "bull": 25}
 

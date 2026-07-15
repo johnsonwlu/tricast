@@ -3,7 +3,7 @@
 import plotly.graph_objects as go
 import streamlit as st
 
-from stock_scenarios import macro_regime, ui
+from tricast import macro_regime, ui
 
 ui.page_setup("🌍 Macro Regime")
 

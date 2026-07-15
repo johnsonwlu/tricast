@@ -6,7 +6,7 @@ from pathlib import Path
 import streamlit as st
 from dotenv import load_dotenv
 
-from stock_scenarios import config
+from tricast import config
 
 load_dotenv(config.PROJECT_ROOT / ".env")
 
@@ -50,11 +50,11 @@ def age_str(created_at: float | None) -> str:
 
 @st.cache_data(ttl=900, show_spinner="Loading macro data…")
 def cached_macro_state():
-    from stock_scenarios import pipeline
+    from tricast import pipeline
     return pipeline.get_macro_state()
 
 
 @st.cache_data(ttl=900, show_spinner="Building report…")
 def cached_report(ticker: str):
-    from stock_scenarios import pipeline
+    from tricast import pipeline
     return pipeline.build_report(ticker, run_llm=False)

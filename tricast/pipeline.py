@@ -7,11 +7,11 @@ analyses cache without an API call.
 
 import logging
 
-from stock_scenarios import config, ledger, macro_regime, store
-from stock_scenarios.data import macro as macro_data
-from stock_scenarios.data import market
-from stock_scenarios.llm import analyst
-from stock_scenarios.quant import montecarlo, scenarios
+from tricast import config, ledger, macro_regime, store
+from tricast.data import macro as macro_data
+from tricast.data import market
+from tricast.llm import analyst
+from tricast.quant import montecarlo, scenarios
 
 log = logging.getLogger(__name__)
 

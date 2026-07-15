@@ -5,7 +5,7 @@ import os
 
 import pandas as pd
 
-from stock_scenarios import config, store
+from tricast import config, store
 
 log = logging.getLogger(__name__)
 

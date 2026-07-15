@@ -13,7 +13,7 @@ import logging
 import time
 from datetime import date, timedelta
 
-from stock_scenarios import config, store
+from tricast import config, store
 
 log = logging.getLogger(__name__)
 
@@ -74,7 +74,7 @@ def brier_score(probs: dict[str, int], outcome: str) -> float:
 def score_matured(db_path=config.DB_PATH) -> list[dict]:
     """Score every unscored prediction whose horizon has passed. Returns the
     newly scored rows. Needs market data (fetches/extends the price cache)."""
-    from stock_scenarios.data import market  # deferred: network-touching
+    from tricast.data import market  # deferred: network-touching
 
     today = date.today().isoformat()
     with store.connect(db_path) as conn:

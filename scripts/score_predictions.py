@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
-from stock_scenarios import ledger  # noqa: E402  (path setup first)
+from tricast import ledger  # noqa: E402  (path setup first)
 
 
 def main():

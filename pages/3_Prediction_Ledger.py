@@ -3,7 +3,7 @@
 import pandas as pd
 import streamlit as st
 
-from stock_scenarios import ledger, ui
+from tricast import ledger, ui
 
 ui.page_setup("📒 Prediction Ledger")
 

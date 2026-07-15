@@ -1,7 +1,7 @@
 import json
 from unittest.mock import patch
 
-from stock_scenarios.llm.analyst import analyze, enforce_bounds, inputs_hash
+from tricast.llm.analyst import analyze, enforce_bounds, inputs_hash
 
 
 def test_within_bounds_passes_through():
@@ -55,7 +55,7 @@ def test_ollama_provider_parses_and_clamps():
     fake = FakeOllamaResponse({"message": {"content": llm_json}})
     payload = {"tilted_probabilities": {"bear": 29, "base": 50, "bull": 21}}
 
-    with patch("stock_scenarios.llm.analyst.requests.post", return_value=fake) as post:
+    with patch("tricast.llm.analyst.requests.post", return_value=fake) as post:
         result = analyze(payload, provider="ollama")
 
     assert post.called

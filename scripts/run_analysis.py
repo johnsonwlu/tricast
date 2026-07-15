@@ -23,8 +23,8 @@ def main():
                         help="include the (paid) Claude analysis")
     args = parser.parse_args()
 
-    from stock_scenarios import pipeline
-    from stock_scenarios.data import macro, market
+    from tricast import pipeline
+    from tricast.data import macro, market
 
     if args.data_only:
         prices = market.get_prices(args.ticker)

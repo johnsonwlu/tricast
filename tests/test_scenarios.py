@@ -1,6 +1,6 @@
 import numpy as np
 
-from stock_scenarios.quant.scenarios import build_scenarios
+from tricast.quant.scenarios import build_scenarios
 
 
 def test_probabilities_sum_to_100_and_targets_ordered():

@@ -8,7 +8,7 @@ band rather than its extreme edge. The information content is in band width
 
 import numpy as np
 
-from stock_scenarios import config
+from tricast import config
 
 
 def build_scenarios(terminal: np.ndarray, spot: float) -> dict:

@@ -2,9 +2,9 @@
 
 import streamlit as st
 
-from stock_scenarios import store, ui
+from tricast import store, ui
 
-ui.page_setup("📈 Stock Scenarios — Watchlist")
+ui.page_setup("📈 Tricast — Watchlist")
 
 # Macro banner (degrades gracefully if FRED key is missing)
 try:
@@ -19,7 +19,7 @@ with st.form("add_ticker", clear_on_submit=True):
     new_ticker = col1.text_input("Add ticker", placeholder="e.g. NVDA",
                                  label_visibility="collapsed")
     if st.form_submit_button("Add") and new_ticker:
-        from stock_scenarios.data import market
+        from tricast.data import market
         t = new_ticker.strip().upper()
         if market.is_valid_ticker(t):
             store.watchlist_add(t)

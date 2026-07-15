@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from stock_scenarios import ledger, store
+from tricast import ledger, store
 
 
 @pytest.fixture
@@ -71,7 +71,7 @@ def test_score_matured_and_summary(db, monkeypatch):
         {"close": [130.0]}, index=pd.to_datetime(["2024-12-31"])
     )
     monkeypatch.setattr(
-        "stock_scenarios.data.market.get_prices", lambda t, db_path=None: fake_prices
+        "tricast.data.market.get_prices", lambda t, db_path=None: fake_prices
     )
     scored = ledger.score_matured(db_path=db)
     assert len(scored) == 1
