@@ -29,6 +29,33 @@ with st.form("add_ticker", clear_on_submit=True):
             st.error(f"'{t}' doesn't look like a valid ticker.")
 
 tickers = store.watchlist_all()
+
+# Bulk analyze the whole watchlist
+if tickers:
+    from tricast import config
+    llm_label = (f"🤖 Analyze all ({len(tickers)}) — local {config.OLLAMA_MODEL}, free"
+                 if config.LLM_PROVIDER == "ollama"
+                 else f"🤖 Analyze all ({len(tickers)}) — calls Claude (~${0.03 * len(tickers):.2f})")
+    if st.button(llm_label):
+        from tricast import bulk
+        prog = st.progress(0.0, "Starting…")
+
+        def _cb(done, total, ticker, row):
+            status = row["advice"] or "?" if row["ok"] else "failed"
+            prog.progress(done / total, f"[{done}/{total}] {ticker}: {status}")
+
+        results = bulk.analyze_many(tickers, run_llm=True, progress_cb=_cb)
+        s = bulk.summarize(results)
+        prog.empty()
+        msg = f"Analyzed {s['ok']}/{s['n']}. Advice: {s['advice_counts']}"
+        if s["total_cost_usd"]:
+            msg += f" · ${s['total_cost_usd']:.2f}"
+        (st.warning if s["failed"] else st.success)(msg)
+        if s["failures"]:
+            st.caption("Failed: " + ", ".join(t for t, _ in s["failures"]))
+        ui.cached_report.clear()
+        st.rerun()
+
 if not tickers:
     st.info("Watchlist is empty — add a ticker above to get started.")
 else:

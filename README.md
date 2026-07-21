@@ -59,6 +59,22 @@ without `FRED_API_KEY` reports run with a neutral macro regime; without
 .venv/bin/pytest                        # offline test suite
 ```
 
+## Bulk analysis
+
+Analyze the whole watchlist in one pass instead of clicking each stock. There's
+an **"Analyze all"** button on the watchlist page, and a CLI:
+
+```sh
+.venv/bin/python scripts/analyze_watchlist.py            # LLM, whole watchlist
+.venv/bin/python scripts/analyze_watchlist.py AAPL MSFT  # just these
+.venv/bin/python scripts/analyze_watchlist.py --no-llm   # quant only (free, fast)
+```
+
+It runs sequentially (the local model serializes on one host anyway), isolates
+failures so one bad ticker doesn't stop the batch, and reuses the analysis
+cache — so re-running only pays for stocks whose inputs actually changed. With
+the paid provider it reports total cost.
+
 ## Prediction ledger
 
 Every report logs its forecast (targets, bands, probabilities, regime, model)
