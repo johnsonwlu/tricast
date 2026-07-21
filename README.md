@@ -59,35 +59,29 @@ without `FRED_API_KEY` reports run with a neutral macro regime; without
 .venv/bin/pytest                        # offline test suite
 ```
 
-## Backtest
+## LLM judge
 
-The prediction ledger takes a year to produce its first scored point. The
-backtest answers the same question *today* by replaying the quant engine on
-past dates (strictly no look-ahead) and checking whether outcomes actually
-landed in the bands at their nominal frequencies:
+The narratives and advice come from an LLM, so their quality is hard to
+eyeball. The judge harness makes it measurable: a judge model scores each
+analysis 1–5 on **factual accuracy, grounding, internal consistency, and
+specificity**, checking the write-up's numeric claims against the ground-truth
+inputs the analyst was given.
 
 ```sh
-.venv/bin/python scripts/backtest.py AAPL MSFT NVDA --start 2016-01-01
+# judge should be STRONGER than the analyst (self-grading is biased):
+python scripts/judge.py AAPL MSFT NVDA --judge-provider anthropic
+# key-free run with a local judge (weaker signal, but factual/math errors
+# are checkable regardless of judge strength):
+python scripts/judge.py AAPL --analyst-provider ollama --judge-provider ollama
 ```
 
-The headline statistic is the Probability Integral Transform (PIT) — the
-percentile of the simulated distribution where the realized price landed. If
-the model is calibrated, PIT values are uniform: 25% of outcomes below P25,
-the P25–P75 band covers 50%, the P10–P90 cone covers 80%.
-
-**What it found, and the fix it drove:** across 1,150 predictions (10 diverse
-tickers, 2016–2025), the P25–P75 band covered **69%** of outcomes (should be
-50%) — the simulated cone was systematically too wide. Central tendency was
-well-calibrated (mean PIT 0.51), so the defect is dispersion, not direction.
-
-The simulator now uses a **block bootstrap** (resampling contiguous ~21-day
-blocks) instead of IID daily draws, which captures the multi-day mean-reversion
-that IID ignores. Measured A/B on identical inputs: P25–P75 coverage improved
-68.6% → 65.1% and every tail moved toward its nominal. It helps on every metric
-but closes only part of the gap — which localizes the remaining error to
-volatility *level* (the 5-year lookback spans high-vol 2020/2022), making
-**vol-scaling to current conditions** the next and larger lever. Run
-`scripts/backtest.py --block 1` to reproduce the old IID numbers.
+Even a local self-judge already earns its keep — on the first run it flagged
+the analyst claiming a base-case return of "5.4%" when the input clearly says
+8.1%, and misreading forward-vs-trailing P/E. These are exactly the fixable
+lapses (a "state spot-vs-target direction before advising" prompt rule, a
+few-shot example) that close the gap between a local model and a frontier one
+without paying per call. Run it, see which dimension scores lowest, fix that
+prompt, re-run.
 
 ## Prediction ledger
 
