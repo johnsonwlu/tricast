@@ -33,6 +33,20 @@ m[3].metric("Margin", f"{f['profitMargins'] * 100:.1f}%" if f.get("profitMargins
 m[4].metric("Beta", f"{f['beta']:.2f}" if f.get("beta") else "—")
 m[5].metric("Analyst target", f"${f['targetMeanPrice']:.0f}" if f.get("targetMeanPrice") else "—")
 
+# --- Risk-adjusted metrics ---
+rk = report["risk"]
+LABEL_COLOR = {"strong": "green", "fair": "blue", "weak": "orange", "poor": "red"}
+st.markdown(
+    f"**Risk-adjusted:** Sharpe :{LABEL_COLOR[rk['label']]}[{rk['sharpe']:.2f} "
+    f"({rk['label']})]  ·  expected return {rk['expected_return_pct']:+.0f}%  ·  "
+    f"volatility {rk['volatility_pct']:.0f}%"
+)
+rm = st.columns(4)
+rm[0].metric("Sharpe", f"{rk['sharpe']:.2f}", help="Return above the risk-free rate per unit of total volatility. Higher = better risk-adjusted; ignores nothing, penalizes all swings.")
+rm[1].metric("Sortino", f"{rk['sortino']:.2f}", help="Like Sharpe but penalizes only downside volatility.")
+rm[2].metric("Prob. of loss", f"{rk['prob_loss_pct']:.0f}%", help="Share of simulated 12-month outcomes below today's price.")
+rm[3].metric("Expected shortfall", f"−{rk['cvar5_pct']:.0f}%", help="Average loss in the worst 5% of outcomes (CVaR).")
+
 # --- Fan chart: 2y history + 12-month simulated cone ---
 hist_dates = pd.to_datetime(report["history"]["dates"])
 hist_close = report["history"]["close"]
