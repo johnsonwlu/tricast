@@ -59,6 +59,29 @@ without `FRED_API_KEY` reports run with a neutral macro regime; without
 .venv/bin/pytest                        # offline test suite
 ```
 
+## Backtest
+
+The prediction ledger takes a year to produce its first scored point. The
+backtest answers the same question *today* by replaying the quant engine on
+past dates (strictly no look-ahead) and checking whether outcomes actually
+landed in the bands at their nominal frequencies:
+
+```sh
+.venv/bin/python scripts/backtest.py AAPL MSFT NVDA --start 2016-01-01
+```
+
+The headline statistic is the Probability Integral Transform (PIT) — the
+percentile of the simulated distribution where the realized price landed. If
+the model is calibrated, PIT values are uniform: 25% of outcomes below P25,
+the P25–P75 band covers 50%, the P10–P90 cone covers 80%.
+
+**What it already found:** across 1,150 predictions (10 diverse tickers,
+2016–2025), the P25–P75 band covered **69%** of outcomes (should be 50%) and
+the cone was systematically too wide — the IID bootstrap overstates 12-month
+volatility (it samples high-vol days like the 2020 crash independently, with no
+mean-reversion). Central tendency was well-calibrated (mean PIT 0.51). This is
+concrete evidence for the block-bootstrap / vol-scaling fixes on the roadmap.
+
 ## Prediction ledger
 
 Every report logs its forecast (targets, bands, probabilities, regime, model)
