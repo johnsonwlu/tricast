@@ -50,6 +50,31 @@ def test_drift_caps():
     assert mu <= config.DRIFT_CAP_ANNUAL
 
 
+def test_block_bootstrap_narrows_cone_under_mean_reversion():
+    """Block bootstrap should produce a narrower terminal distribution than IID
+    when returns mean-revert (negative autocorrelation), because it captures the
+    multi-day variance reduction that independent draws miss."""
+    rng = np.random.default_rng(0)
+    n = 1300
+    noise = rng.normal(0, 0.015, n)
+    r = np.zeros(n)
+    for t in range(1, n):
+        r[t] = -0.3 * r[t - 1] + noise[t]        # AR(1), mean-reverting
+    closes = pd.Series(100 * np.exp(np.cumsum(r)))
+
+    iid = montecarlo.simulate(closes, n_paths=8000, block=1, seed=1)
+    blk = montecarlo.simulate(closes, n_paths=8000, block=21, seed=1)
+    spread_iid = np.percentile(iid["terminal"], 90) - np.percentile(iid["terminal"], 10)
+    spread_blk = np.percentile(blk["terminal"], 90) - np.percentile(blk["terminal"], 10)
+    assert spread_blk < spread_iid
+
+
+def test_block_1_matches_iid_shape():
+    closes = make_closes()
+    sim = montecarlo.simulate(closes, n_paths=2000, block=1, seed=3)
+    assert sim["terminal"].shape == (2000,)
+
+
 def test_no_analyst_target_uses_historical_only():
     closes = make_closes()
     returns = np.log(closes / closes.shift(1)).dropna()
