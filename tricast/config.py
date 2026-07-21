@@ -17,6 +17,7 @@ N_PATHS = 10_000
 RNG_SEED = 42
 BLOCK_SIZE = 21                 # block-bootstrap length (days); ~1 trading month
 DRIFT_CAP_ANNUAL = 0.25         # cap each drift component to +/-25%/yr
+RISK_FREE_ANNUAL = 0.043        # risk-free rate for Sharpe/Sortino (~1y T-bill)
 # Terminal distribution partition: below P25 = bear, P25-P75 = base, above = bull
 BAND_LOWER_PCT = 25
 BAND_UPPER_PCT = 75

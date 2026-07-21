@@ -59,6 +59,23 @@ without `FRED_API_KEY` reports run with a neutral macro regime; without
 .venv/bin/pytest                        # offline test suite
 ```
 
+## Risk-adjusted score
+
+Raw probability-weighted expected return rewards volatility — because price is
+lognormal-ish, a high-beta name gets an enormous upper tail that inflates its
+mean return, so a volatile single stock looks "better" than a diversified ETF
+that is clearly the sounder holding. Each report computes risk-adjusted metrics
+from the full Monte Carlo terminal distribution — **Sharpe** and **Sortino**
+ratios, **probability of loss**, and **expected shortfall** (worst-5% CVaR) —
+shown on the watchlist and detail pages, and fed to the LLM so advice weighs
+reward *per unit of risk* rather than raw upside.
+
+The effect is real: before this, the app said *buy AMD / hold VOO*. AMD's +39%
+expected return (vs VOO's +14%) came from a huge bull tail — but with a 40%
+chance of loss and a −62% worst case, its Sharpe is 0.38 (weak) vs VOO's 0.57
+(fair). With the risk metrics in the prompt, **AMD moves to hold**, its
+reasoning now citing the poor risk-adjusted profile.
+
 ## Bulk analysis
 
 Analyze the whole watchlist in one pass instead of clicking each stock. There's

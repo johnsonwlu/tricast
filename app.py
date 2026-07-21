@@ -80,10 +80,12 @@ else:
             cols[0].markdown(f"### {ticker}")
             cols[1].metric("Price", f"${report['spot']:.2f}", f"{chg_1d:+.1f}% 1d")
             cols[2].metric("1 month", f"{chg_1m:+.1f}%")
+            rk = report["risk"]
             cols[3].markdown(
                 f"🐻 bear **{probs['bear']}%** → ${report['scenarios']['bear']['target']:.0f}  \n"
                 f"⚖️ base **{probs['base']}%** → ${report['scenarios']['base']['target']:.0f}  \n"
-                f"🐂 bull **{probs['bull']}%** → ${report['scenarios']['bull']['target']:.0f}"
+                f"🐂 bull **{probs['bull']}%** → ${report['scenarios']['bull']['target']:.0f}  \n"
+                f"📊 Sharpe **{rk['sharpe']:.2f}** ({rk['label']}) · P(loss) {rk['prob_loss_pct']:.0f}%"
             )
             if analysis:
                 cols[4].markdown(ui.advice_badge(analysis["advice"]))
