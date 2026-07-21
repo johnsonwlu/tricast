@@ -7,7 +7,7 @@ analyses cache without an API call.
 
 import logging
 
-from tricast import config, errors, ledger, macro_regime, store
+from tricast import config, errors, ledger, macro_regime, risk, store
 from tricast.data import macro as macro_data
 from tricast.data import market
 from tricast.llm import analyst
@@ -42,6 +42,7 @@ def build_report(ticker: str, run_llm: bool = False, db_path=config.DB_PATH) -> 
         # message the user sees says "SNDK" rather than "This stock"
         raise errors.InsufficientHistory(e.have, e.need, ticker) from None
     bands = scenarios.build_scenarios(sim["terminal"], sim["spot"])
+    risk_metrics = risk.risk_metrics(sim["terminal"], sim["spot"])
 
     try:
         macro_state = get_macro_state(db_path=db_path)
@@ -60,6 +61,7 @@ def build_report(ticker: str, run_llm: bool = False, db_path=config.DB_PATH) -> 
         "horizon_days": sim["horizon"],
         "scenarios": bands,
         "tilted_probabilities": tilted,
+        "risk": risk_metrics,
         "macro": macro_state,
         "fundamentals": fundamentals,
         "cone": sim["cone"],
@@ -120,6 +122,7 @@ def _llm_payload(report: dict) -> dict:
             for name, s in report["scenarios"].items()
         },
         "tilted_probabilities": report["tilted_probabilities"],
+        "risk_adjusted": report["risk"],
         "macro": {
             "regime": report["macro"]["regime"],
             "score": report["macro"]["score"],

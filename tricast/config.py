@@ -17,6 +17,7 @@ N_PATHS = 10_000
 RNG_SEED = 42
 BLOCK_SIZE = 21                 # block-bootstrap length (days); ~1 trading month
 DRIFT_CAP_ANNUAL = 0.25         # cap each drift component to +/-25%/yr
+RISK_FREE_ANNUAL = 0.043        # risk-free rate for Sharpe/Sortino (~1y T-bill)
 # Learned dispersion correction (see calibration.py). The backtest showed the
 # 5y-lookback cone is too wide; scripts/calibrate.py fits this scalar to shrink
 # it toward calibration and writes CALIBRATION_PATH. DEFAULT is the neutral
