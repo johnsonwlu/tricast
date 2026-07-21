@@ -59,6 +59,30 @@ without `FRED_API_KEY` reports run with a neutral macro regime; without
 .venv/bin/pytest                        # offline test suite
 ```
 
+## LLM judge
+
+The narratives and advice come from an LLM, so their quality is hard to
+eyeball. The judge harness makes it measurable: a judge model scores each
+analysis 1–5 on **factual accuracy, grounding, internal consistency, and
+specificity**, checking the write-up's numeric claims against the ground-truth
+inputs the analyst was given.
+
+```sh
+# judge should be STRONGER than the analyst (self-grading is biased):
+python scripts/judge.py AAPL MSFT NVDA --judge-provider anthropic
+# key-free run with a local judge (weaker signal, but factual/math errors
+# are checkable regardless of judge strength):
+python scripts/judge.py AAPL --analyst-provider ollama --judge-provider ollama
+```
+
+Even a local self-judge already earns its keep — on the first run it flagged
+the analyst claiming a base-case return of "5.4%" when the input clearly says
+8.1%, and misreading forward-vs-trailing P/E. These are exactly the fixable
+lapses (a "state spot-vs-target direction before advising" prompt rule, a
+few-shot example) that close the gap between a local model and a frontier one
+without paying per call. Run it, see which dimension scores lowest, fix that
+prompt, re-run.
+
 ## Prediction ledger
 
 Every report logs its forecast (targets, bands, probabilities, regime, model)
