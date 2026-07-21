@@ -15,6 +15,7 @@ MIN_HISTORY_DAYS = 504          # 2 trading years; refuse to analyze below this
 HORIZON_DAYS = 252              # 12-month forecast
 N_PATHS = 10_000
 RNG_SEED = 42
+BLOCK_SIZE = 21                 # block-bootstrap length (days); ~1 trading month
 DRIFT_CAP_ANNUAL = 0.25         # cap each drift component to +/-25%/yr
 # Terminal distribution partition: below P25 = bear, P25-P75 = base, above = bull
 BAND_LOWER_PCT = 25
