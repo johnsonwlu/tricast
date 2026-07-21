@@ -25,11 +25,13 @@ def main():
     p.add_argument("--end", default=None, help="latest as-of date")
     p.add_argument("--freq", default="MS", help="as-of spacing (MS=monthly, W=weekly)")
     p.add_argument("--n-paths", type=int, default=5000)
+    p.add_argument("--block", type=int, default=None,
+                   help="bootstrap block length in days (1 = old IID; default = config)")
     args = p.parse_args()
 
     results = backtest.run_backtest(
         args.tickers, start=args.start, end=args.end,
-        freq=args.freq, n_paths=args.n_paths,
+        freq=args.freq, n_paths=args.n_paths, block=args.block,
     )
     print("\n" + backtest.format_summary(backtest.summarize_backtest(results)))
 
