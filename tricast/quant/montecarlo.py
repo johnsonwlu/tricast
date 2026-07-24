@@ -55,23 +55,30 @@ def simulate(
     n_paths: int = config.N_PATHS,
     seed: int = config.RNG_SEED,
     block: int | None = None,
+    vol_scale: float | None = None,
 ) -> dict:
     """Run the simulation. Returns terminal prices and the percentile cone.
 
     closes: daily close series, oldest first. Requires MIN_HISTORY_DAYS points.
     block: block-bootstrap length in days (defaults to config.BLOCK_SIZE);
            block=1 recovers plain IID resampling.
+    vol_scale: multiplier on the sampled return dispersion (shocks only, not
+           drift). Defaults to the learned value from calibration.py; pass an
+           explicit value (e.g. 1.0) to bypass calibration for A/B testing.
     """
     if len(closes) < config.MIN_HISTORY_DAYS:
         raise ValueError(
             f"Need at least {config.MIN_HISTORY_DAYS} days of history, got {len(closes)}"
         )
     block = config.BLOCK_SIZE if block is None else block
+    if vol_scale is None:
+        from tricast import calibration
+        vol_scale = calibration.load_vol_scale()
     spot = float(closes.iloc[-1])
     log_returns = np.log(closes / closes.shift(1)).dropna()
 
     mu_annual = compute_drift(log_returns, spot, analyst_target)
-    demeaned = (log_returns - log_returns.mean()).to_numpy()
+    demeaned = (log_returns - log_returns.mean()).to_numpy() * vol_scale
     daily_drift = mu_annual / 252
 
     rng = np.random.default_rng(seed)
@@ -88,6 +95,7 @@ def simulate(
     return {
         "spot": spot,
         "mu_annual": mu_annual,
+        "vol_scale": vol_scale,
         "terminal": terminal,
         "cone": cone,
         "horizon": horizon,

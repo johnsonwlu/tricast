@@ -6,7 +6,7 @@ import streamlit as st
 
 from tricast import store, ui
 
-ui.page_setup("🔍 Stock Detail")
+ui.page_setup("Stock Detail")
 
 tickers = store.watchlist_all()
 if not tickers:
@@ -65,6 +65,21 @@ fig.update_layout(height=480, margin=dict(t=30, b=10),
                   yaxis_title="Price ($)", hovermode="x unified")
 st.plotly_chart(fig, width="stretch")
 
+# Calibration provenance: is the cone width learned or neutral?
+from tricast import calibration
+_vs = report.get("vol_scale", 1.0)
+if _vs != 1.0:
+    _meta = calibration.metadata()
+    _when = (_meta.get("fitted_at") or "")[:10]
+    st.caption(
+        f"Cone width **calibrated** — dispersion ×{_vs:.2f} learned from the "
+        f"backtest{f' (fit {_when})' if _when else ''}. Run "
+        "`scripts/calibrate.py --write` to refit."
+    )
+else:
+    st.caption("Cone width **uncalibrated** (vol_scale 1.0) — run "
+               "`scripts/calibrate.py --write` to fit it to history.")
+
 # --- Scenario cards ---
 analysis = report.get("analysis")
 probs = (
@@ -72,10 +87,10 @@ probs = (
     if analysis else report["tilted_probabilities"]
 )
 cards = st.columns(3)
-for col, name, emoji in zip(cards, ("bear", "base", "bull"), ("🐻", "⚖️", "🐂")):
+for col, name in zip(cards, ("bear", "base", "bull")):
     s = report["scenarios"][name]
     with col, st.container(border=True):
-        st.markdown(f"#### {emoji} {name.title()} — {probs[name]}%")
+        st.markdown(f"#### {name.title()} — {probs[name]}%")
         st.metric("12-mo target", f"${s['target']:.2f}", f"{s['return_pct']:+.1f}% vs spot")
         if analysis:
             st.write(analysis["scenarios"][name]["narrative"])
@@ -99,16 +114,16 @@ if analysis:
 
 # --- Actions ---
 c1, c2 = st.columns(2)
-if c1.button("🔄 Refresh data (free)"):
+if c1.button("Refresh data (free)"):
     ui.cached_report.clear()
     ui.cached_macro_state.clear()
     st.rerun()
 from tricast import config
 
 llm_label = (
-    f"🤖 Re-run analysis (local {config.OLLAMA_MODEL}, free)"
+    f"Re-run analysis (local {config.OLLAMA_MODEL}, free)"
     if config.LLM_PROVIDER == "ollama"
-    else "🤖 Re-run analysis (~$0.03, calls Claude)"
+    else "Re-run analysis (~$0.03, calls Claude)"
 )
 if c2.button(llm_label):
     from tricast import pipeline
