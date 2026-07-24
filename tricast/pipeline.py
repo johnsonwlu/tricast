@@ -50,6 +50,7 @@ def build_report(ticker: str, run_llm: bool = False, db_path=config.DB_PATH) -> 
         "ticker": ticker,
         "spot": sim["spot"],
         "mu_annual": round(sim["mu_annual"], 4),
+        "vol_scale": sim["vol_scale"],
         "horizon_days": sim["horizon"],
         "scenarios": bands,
         "tilted_probabilities": tilted,

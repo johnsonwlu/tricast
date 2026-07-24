@@ -129,6 +129,37 @@ volatility *level* (the 5-year lookback spans high-vol 2020/2022), making
 **vol-scaling to current conditions** the next and larger lever. Run
 `scripts/backtest.py --block 1` to reproduce the old IID numbers.
 
+## Self-calibration
+
+The backtest doesn't just *measure* the too-wide cone — it closes the loop. The
+model carries one learned parameter, a dispersion multiplier `vol_scale`, and
+`scripts/calibrate.py` fits it: it replays the engine across history, sweeps the
+multiplier, and picks the value whose P25–P75 band actually covers 50% of
+outcomes. The fitted value is written to `data/calibration.json` and every
+future prediction loads it automatically — so re-running the calibrator is all
+it takes for the model to keep tracking reality as new data arrives.
+
+```sh
+.venv/bin/python scripts/calibrate.py            # dry run: fit + report, no write
+.venv/bin/python scripts/calibrate.py --write    # persist the fitted value
+```
+
+Two deliberate constraints keep this honest rather than a curve-fitting toy:
+
+- **One parameter.** With a personal-sized dataset, fitting many knobs would
+  overfit and lie to you. A single dispersion scalar — fit against thousands of
+  historical pseudo-observations — is about as much learning as the data
+  supports, and it's clamped to a sane range so a bad fit can't silently distort
+  every forecast.
+- **Held-out validation.** The basket is split into train and holdout tickers;
+  the fit only sees train, and the script reports coverage on the holdout it
+  never touched, so you can see whether the correction *generalizes* rather than
+  just memorizes.
+
+Run it with `--write`, and the sweep prints the before/after coverage on both
+sets. The mechanism (`vol_scale`) is separable from the calibration data, so you
+can always reproduce the old behavior by deleting `data/calibration.json`.
+
 ## Prediction ledger
 
 Every report logs its forecast (targets, bands, probabilities, regime, model)

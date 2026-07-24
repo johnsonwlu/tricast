@@ -65,6 +65,21 @@ fig.update_layout(height=480, margin=dict(t=30, b=10),
                   yaxis_title="Price ($)", hovermode="x unified")
 st.plotly_chart(fig, width="stretch")
 
+# Calibration provenance: is the cone width learned or neutral?
+from tricast import calibration
+_vs = report.get("vol_scale", 1.0)
+if _vs != 1.0:
+    _meta = calibration.metadata()
+    _when = (_meta.get("fitted_at") or "")[:10]
+    st.caption(
+        f"Cone width **calibrated** — dispersion ×{_vs:.2f} learned from the "
+        f"backtest{f' (fit {_when})' if _when else ''}. Run "
+        "`scripts/calibrate.py --write` to refit."
+    )
+else:
+    st.caption("Cone width **uncalibrated** (vol_scale 1.0) — run "
+               "`scripts/calibrate.py --write` to fit it to history.")
+
 # --- Scenario cards ---
 analysis = report.get("analysis")
 probs = (
