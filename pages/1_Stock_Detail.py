@@ -6,7 +6,7 @@ import streamlit as st
 
 from tricast import store, ui
 
-ui.page_setup("🔍 Stock Detail")
+ui.page_setup("Stock Detail")
 
 tickers = store.watchlist_all()
 if not tickers:
@@ -87,10 +87,10 @@ probs = (
     if analysis else report["tilted_probabilities"]
 )
 cards = st.columns(3)
-for col, name, emoji in zip(cards, ("bear", "base", "bull"), ("🐻", "⚖️", "🐂")):
+for col, name in zip(cards, ("bear", "base", "bull")):
     s = report["scenarios"][name]
     with col, st.container(border=True):
-        st.markdown(f"#### {emoji} {name.title()} — {probs[name]}%")
+        st.markdown(f"#### {name.title()} — {probs[name]}%")
         st.metric("12-mo target", f"${s['target']:.2f}", f"{s['return_pct']:+.1f}% vs spot")
         if analysis:
             st.write(analysis["scenarios"][name]["narrative"])
@@ -114,16 +114,16 @@ if analysis:
 
 # --- Actions ---
 c1, c2 = st.columns(2)
-if c1.button("🔄 Refresh data (free)"):
+if c1.button("Refresh data (free)"):
     ui.cached_report.clear()
     ui.cached_macro_state.clear()
     st.rerun()
 from tricast import config
 
 llm_label = (
-    f"🤖 Re-run analysis (local {config.OLLAMA_MODEL}, free)"
+    f"Re-run analysis (local {config.OLLAMA_MODEL}, free)"
     if config.LLM_PROVIDER == "ollama"
-    else "🤖 Re-run analysis (~$0.03, calls Claude)"
+    else "Re-run analysis (~$0.03, calls Claude)"
 )
 if c2.button(llm_label):
     from tricast import pipeline

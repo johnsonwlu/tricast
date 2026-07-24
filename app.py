@@ -4,7 +4,7 @@ import streamlit as st
 
 from tricast import store, ui
 
-ui.page_setup("📈 Tricast — Watchlist")
+ui.page_setup("Tricast — Watchlist")
 
 # Macro banner (degrades gracefully if FRED key is missing)
 try:
@@ -33,9 +33,9 @@ tickers = store.watchlist_all()
 # Bulk analyze the whole watchlist
 if tickers:
     from tricast import config
-    llm_label = (f"🤖 Analyze all ({len(tickers)}) — local {config.OLLAMA_MODEL}, free"
+    llm_label = (f"Analyze all ({len(tickers)}) — local {config.OLLAMA_MODEL}, free"
                  if config.LLM_PROVIDER == "ollama"
-                 else f"🤖 Analyze all ({len(tickers)}) — calls Claude (~${0.03 * len(tickers):.2f})")
+                 else f"Analyze all ({len(tickers)}) — calls Claude (~${0.03 * len(tickers):.2f})")
     if st.button(llm_label):
         from tricast import bulk
         prog = st.progress(0.0, "Starting…")
@@ -81,9 +81,9 @@ else:
             cols[1].metric("Price", f"${report['spot']:.2f}", f"{chg_1d:+.1f}% 1d")
             cols[2].metric("1 month", f"{chg_1m:+.1f}%")
             cols[3].markdown(
-                f"🐻 bear **{probs['bear']}%** → ${report['scenarios']['bear']['target']:.0f}  \n"
-                f"⚖️ base **{probs['base']}%** → ${report['scenarios']['base']['target']:.0f}  \n"
-                f"🐂 bull **{probs['bull']}%** → ${report['scenarios']['bull']['target']:.0f}"
+                f"bear **{probs['bear']}%** → ${report['scenarios']['bear']['target']:.0f}  \n"
+                f"base **{probs['base']}%** → ${report['scenarios']['base']['target']:.0f}  \n"
+                f"bull **{probs['bull']}%** → ${report['scenarios']['bull']['target']:.0f}"
             )
             if analysis:
                 cols[4].markdown(ui.advice_badge(analysis["advice"]))
@@ -93,7 +93,7 @@ else:
             if cols[6].button("Details", key=f"detail_{ticker}"):
                 st.session_state["selected_ticker"] = ticker
                 st.switch_page("pages/1_Stock_Detail.py")
-            if cols[7].button("✕", key=f"rm_{ticker}", help=f"Remove {ticker}"):
+            if cols[7].button("Remove", key=f"rm_{ticker}", help=f"Remove {ticker}"):
                 store.watchlist_remove(ticker)
                 st.rerun()
 
