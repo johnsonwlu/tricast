@@ -45,21 +45,41 @@ def test_no_lookahead_outcome_indexing(monkeypatch):
     assert r["outcome_price"] == round(float(expected_outcome), 2)
 
 
-def test_pit_and_band_consistency():
+def test_band_matches_the_realized_return_thresholds():
+    """Scenarios are now defined by the return itself, not by where the outcome
+    fell in the simulated distribution — so the band must follow the realized
+    return, and is deliberately no longer tied to the PIT quartiles."""
+    from tricast import config
+
     series = _random_walk()
     results = backtest.run_backtest(
         ["X"], start="2015-01-01", freq="MS", n_paths=2000,
         price_loader=lambda _: series,
     )
     assert results
+    tol = 0.15                      # rounding of price/return to 2dp/1dp
     for r in results:
-        # band and PIT must agree
+        ret = r["realized_return_pct"]
         if r["band"] == "bear":
-            assert r["pit"] < 0.25
+            assert ret <= config.BEAR_RETURN_PCT + tol
         elif r["band"] == "bull":
-            assert r["pit"] > 0.75
+            assert ret >= config.BULL_RETURN_PCT - tol
         else:
-            assert 0.25 <= r["pit"] <= 0.75
+            assert config.BEAR_RETURN_PCT - tol <= ret <= config.BULL_RETURN_PCT + tol
+
+
+def test_scenario_probabilities_are_scored_against_the_naive_baseline():
+    series = _random_walk()
+    results = backtest.run_backtest(
+        ["X"], start="2015-01-01", freq="MS", n_paths=2000,
+        price_loader=lambda _: series,
+    )
+    summary = backtest.summarize_backtest(results)
+    assert summary["mean_brier"] is not None
+    assert summary["baseline_brier"] > 0
+    assert isinstance(summary["beats_baseline"], bool)
+    for r in results:                       # probabilities travel with each row
+        assert r["p_bear"] + r["p_base"] + r["p_bull"] == 100
 
 
 def test_calibrated_on_random_walk():

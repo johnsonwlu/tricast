@@ -92,9 +92,14 @@ def run_backtest(
             )
             terminal = sim["terminal"]
             spot = sim["spot"]
-            p25 = float(np.percentile(terminal, config.BAND_LOWER_PCT))
-            p75 = float(np.percentile(terminal, config.BAND_UPPER_PCT))
-            band = ledger.classify_outcome(outcome_price, p25, p75)
+            # classify against the same return thresholds the app forecasts on,
+            # and record the probability the model gave that outcome so the
+            # scenario odds can be scored for calibration, not just coverage
+            bands = scenarios.build_scenarios(terminal, spot)
+            bounds = scenarios.band_bounds(spot)
+            band = ledger.classify_outcome(
+                outcome_price, bounds["lower_price"], bounds["upper_price"])
+            probs = {k: bands[k]["prior_prob"] for k in NOMINAL}
             pit = float((terminal < outcome_price).mean())
             p50 = float(np.percentile(terminal, 50))
 
@@ -106,6 +111,9 @@ def run_backtest(
                 "outcome_price": round(outcome_price, 2),
                 "realized_return_pct": round((outcome_price / spot - 1) * 100, 1),
                 "band": band,
+                "p_bear": probs["bear"], "p_base": probs["base"],
+                "p_bull": probs["bull"],
+                "brier": ledger.brier_score(probs, band),
                 "pit": round(pit, 4),
                 "median_forecast": round(p50, 2),
                 "median_abs_pct_err": round(abs(p50 / outcome_price - 1) * 100, 1),
@@ -124,12 +132,28 @@ def summarize_backtest(results: list[dict]) -> dict:
     band_counts = Counter(r["band"] for r in results)
 
     realized_freq = {b: round(band_counts.get(b, 0) / n, 3) for b in NOMINAL}
+    # Reliability: when the model says "18% chance of the bear case", does the
+    # bear case happen ~18% of the time? Comparing against the old fixed
+    # 25/50/25 would now be meaningless, since the odds vary per stock.
+    mean_predicted = {
+        b: round(float(np.mean([r[f"p_{b}"] for r in results])) / 100, 3)
+        for b in NOMINAL if all(f"p_{b}" in r for r in results)
+    }
     # PIT-based coverage of the model's own intervals
     cov_50 = float(np.mean((pit >= 0.25) & (pit <= 0.75)))   # P25–P75, nominal 0.50
     cov_80 = float(np.mean((pit >= 0.10) & (pit <= 0.90)))   # P10–P90, nominal 0.80
 
     # 10-bin PIT histogram — flat means calibrated; skew reveals bias direction
     hist, _ = np.histogram(pit, bins=10, range=(0, 1))
+
+    # Do the stock-specific odds actually beat the fixed 25/50/25 they replaced?
+    # This is the falsifiable test of the whole scenario-probability change:
+    # varying the numbers is only an improvement if it lowers the Brier score.
+    briers = [r["brier"] for r in results if "brier" in r]
+    mean_brier = round(float(np.mean(briers)), 4) if briers else None
+    naive = {"bear": 25, "base": 50, "bull": 25}
+    baseline_brier = round(
+        float(np.mean([ledger.brier_score(naive, r["band"]) for r in results])), 4)
 
     mean_pit = float(pit.mean())
     if mean_pit < 0.45:
@@ -142,11 +166,15 @@ def summarize_backtest(results: list[dict]) -> dict:
     return {
         "n": n,
         "realized_band_freq": realized_freq,
+        "mean_predicted_prob": mean_predicted,
         "nominal_band_freq": NOMINAL,
         "coverage_p25_p75": round(cov_50, 3),      # want ~0.50
         "coverage_p10_p90": round(cov_80, 3),      # want ~0.80
         "mean_pit": round(mean_pit, 3),            # want ~0.50
         "pit_bias": bias,
+        "mean_brier": mean_brier,                  # lower is better
+        "baseline_brier": baseline_brier,          # fixed 25/50/25
+        "beats_baseline": (mean_brier is not None and mean_brier < baseline_brier),
         "pit_histogram": hist.tolist(),
         "median_abs_pct_err": round(
             float(np.median([r["median_abs_pct_err"] for r in results])), 1),
@@ -160,15 +188,21 @@ def format_summary(summary: dict) -> str:
     lines = [
         f"Backtest calibration  (n = {s['n']} predictions)",
         "-" * 52,
-        "Band coverage        realized   nominal",
-        f"  bear (< P25)        {s['realized_band_freq']['bear']:>6.1%}    {NOMINAL['bear']:>6.1%}",
-        f"  base (P25–P75)      {s['realized_band_freq']['base']:>6.1%}    {NOMINAL['base']:>6.1%}",
-        f"  bull (> P75)        {s['realized_band_freq']['bull']:>6.1%}    {NOMINAL['bull']:>6.1%}",
+        "Scenario reliability   predicted   realized   (want these to match)",
+        f"  bear (<= {config.BEAR_RETURN_PCT:+.0f}%)      "
+        f"{s['mean_predicted_prob'].get('bear', 0):>6.1%}     {s['realized_band_freq']['bear']:>6.1%}",
+        f"  base                 "
+        f"{s['mean_predicted_prob'].get('base', 0):>6.1%}     {s['realized_band_freq']['base']:>6.1%}",
+        f"  bull (>= {config.BULL_RETURN_PCT:+.0f}%)      "
+        f"{s['mean_predicted_prob'].get('bull', 0):>6.1%}     {s['realized_band_freq']['bull']:>6.1%}",
         "",
         f"  P25–P75 interval covers {s['coverage_p25_p75']:.1%} of outcomes (want 50%)",
         f"  P10–P90 interval covers {s['coverage_p10_p90']:.1%} of outcomes (want 80%)",
         f"  mean PIT = {s['mean_pit']:.3f} (want 0.50) -> {s['pit_bias']}",
         f"  median |forecast error| = {s['median_abs_pct_err']:.1f}%",
+        "",
+        f"  scenario Brier = {s['mean_brier']} vs naive 25/50/25 {s['baseline_brier']}"
+        f"  -> {'BEATS baseline' if s['beats_baseline'] else 'no better than naive'}",
         "",
         f"  PIT histogram (10 bins, flat = calibrated): {s['pit_histogram']}",
     ]
