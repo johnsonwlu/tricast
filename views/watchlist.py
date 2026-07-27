@@ -2,7 +2,7 @@
 
 import streamlit as st
 
-from tricast import store, ui
+from tricast import errors, store, ui
 
 ui.page_setup(
     "Your watchlist",
@@ -28,13 +28,20 @@ with st.form("add_ticker", clear_on_submit=True):
     if col2.form_submit_button("Add stock", width="stretch") and new_ticker:
         from tricast.data import market
         t = new_ticker.strip().upper()
-        if market.is_valid_ticker(t):
-            store.watchlist_add(t)
-            ui.cached_report.clear()
-            st.rerun()
-        else:
+        if not market.is_valid_ticker(t):
             st.error(f"Couldn't find a stock with the symbol '{t}'. "
                      "Double-check the spelling — it's the short code, like AAPL.")
+        else:
+            # existence isn't enough: reject anything too newly listed to model,
+            # so it can't become a permanently broken row further down the page
+            try:
+                market.check_addable(t)
+            except errors.PermanentTickerError as e:
+                st.error(e.friendly())
+            else:
+                store.watchlist_add(t)
+                ui.cached_report.clear()
+                st.rerun()
 
 tickers = store.watchlist_all()
 
@@ -68,11 +75,30 @@ if not tickers:
     st.info("Your watchlist is empty. Add a stock symbol above to get started — "
             "try NVDA, AAPL, or VOO if you're not sure where to begin.")
 else:
+    dropped = []
     for ticker in tickers:
         try:
             report = ui.cached_report(ticker)
+        except errors.PermanentTickerError as e:
+            # can never succeed on a retry, so don't leave it sitting there
+            # broken with no way to get rid of it
+            store.watchlist_remove(ticker)
+            dropped.append(e.friendly())
+            continue
         except Exception as e:
-            st.error(f"Couldn't load {ticker}: {e}")
+            # might just be a network blip — keep it, but make it removable
+            with st.container(border=True):
+                st.markdown(f"### {ticker}")
+                st.markdown(ui.pill("Couldn't load right now", "caution"),
+                            unsafe_allow_html=True)
+                st.markdown(f"<span class='tc-note'>{e}</span>",
+                            unsafe_allow_html=True)
+                st.caption("This usually clears up on its own — try refreshing. "
+                           "If it keeps happening, you can remove it.")
+                if st.button("Remove", key=f"rm_err_{ticker}",
+                             help=f"Remove {ticker} from your watchlist"):
+                    store.watchlist_remove(ticker)
+                    st.rerun()
             continue
 
         analysis = report.get("analysis")
@@ -141,5 +167,8 @@ else:
                              width="stretch"):
                     store.watchlist_remove(ticker)
                     st.rerun()
+
+    for message in dropped:
+        st.warning(f"Removed from your watchlist — {message}")
 
 ui.disclaimer()

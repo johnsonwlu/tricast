@@ -4,7 +4,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from tricast import calibration, config, store, ui
+from tricast import calibration, config, errors, store, ui
 
 ui.page_setup(
     "Stock detail",
@@ -23,8 +23,15 @@ ticker = st.selectbox("Choose a stock", tickers,
 
 try:
     report = ui.cached_report(ticker)
+except errors.PermanentTickerError as e:
+    st.error(e.friendly())
+    if st.button(f"Remove {ticker} from my watchlist"):
+        store.watchlist_remove(ticker)
+        st.session_state.pop("selected_ticker", None)
+        st.rerun()
+    st.stop()
 except Exception as e:
-    st.error(f"Couldn't load {ticker}: {e}")
+    st.error(f"Couldn't load {ticker} right now: {e}")
     st.stop()
 
 ui.explainer()

@@ -6,7 +6,7 @@ from datetime import date, timedelta
 import pandas as pd
 import yfinance as yf
 
-from tricast import config, store
+from tricast import config, errors, store
 
 log = logging.getLogger(__name__)
 
@@ -31,6 +31,27 @@ def is_valid_ticker(ticker: str) -> bool:
         return False
 
 
+def check_addable(ticker: str) -> None:
+    """Raise a PermanentTickerError if this stock can't ever be modelled.
+
+    Existence alone isn't enough to be useful: a company that listed six months
+    ago is perfectly real but has nowhere near the history the simulation needs.
+    Checking at add-time means the failure is explained once, up front, instead
+    of turning into a permanently broken row on the watchlist.
+    """
+    try:
+        hist = yf.Ticker(ticker).history(period="max", auto_adjust=True)
+    except Exception as e:                       # network/API trouble
+        log.warning("could not validate %s: %s", ticker, e)
+        return                                   # transient: let it through
+    if hist.empty:
+        raise errors.UnknownTicker(ticker)
+    if len(hist) < config.MIN_HISTORY_DAYS:
+        raise errors.InsufficientHistory(have=len(hist),
+                                         need=config.MIN_HISTORY_DAYS,
+                                         ticker=ticker)
+
+
 def get_prices(ticker: str, db_path=config.DB_PATH) -> pd.DataFrame:
     """Daily OHLCV, lookback per config. Incremental: only fetches dates newer
     than the cache. Returns a DataFrame indexed by date with a Close column."""
@@ -48,7 +69,7 @@ def get_prices(ticker: str, db_path=config.DB_PATH) -> pd.DataFrame:
 
     rows = store.prices_load(ticker, db_path=db_path)
     if not rows:
-        raise ValueError(f"No price data available for {ticker!r}")
+        raise errors.UnknownTicker(ticker)
     df = pd.DataFrame(rows, columns=["date", "open", "high", "low", "close", "volume"])
     df["date"] = pd.to_datetime(df["date"])
     return df.set_index("date")
