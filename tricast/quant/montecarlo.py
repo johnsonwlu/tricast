@@ -18,7 +18,7 @@ reality. `block=1` recovers the old IID behavior exactly (for A/B testing).
 import numpy as np
 import pandas as pd
 
-from tricast import config
+from tricast import config, errors
 
 
 def _block_bootstrap(demeaned: np.ndarray, n_paths: int, horizon: int,
@@ -67,9 +67,8 @@ def simulate(
            explicit value (e.g. 1.0) to bypass calibration for A/B testing.
     """
     if len(closes) < config.MIN_HISTORY_DAYS:
-        raise ValueError(
-            f"Need at least {config.MIN_HISTORY_DAYS} days of history, got {len(closes)}"
-        )
+        raise errors.InsufficientHistory(have=len(closes),
+                                         need=config.MIN_HISTORY_DAYS)
     block = config.BLOCK_SIZE if block is None else block
     if vol_scale is None:
         from tricast import calibration

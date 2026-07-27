@@ -7,7 +7,7 @@ analyses cache without an API call.
 
 import logging
 
-from tricast import config, ledger, macro_regime, store
+from tricast import config, errors, ledger, macro_regime, store
 from tricast.data import macro as macro_data
 from tricast.data import market
 from tricast.llm import analyst
@@ -34,7 +34,13 @@ def build_report(ticker: str, run_llm: bool = False, db_path=config.DB_PATH) -> 
     prices = market.get_prices(ticker, db_path=db_path)
     fundamentals = market.get_fundamentals(ticker, db_path=db_path)
 
-    sim = montecarlo.simulate(prices["close"], analyst_target=fundamentals.get("targetMeanPrice"))
+    try:
+        sim = montecarlo.simulate(
+            prices["close"], analyst_target=fundamentals.get("targetMeanPrice"))
+    except errors.InsufficientHistory as e:
+        # the simulator has no idea which ticker it was handed; name it so the
+        # message the user sees says "SNDK" rather than "This stock"
+        raise errors.InsufficientHistory(e.have, e.need, ticker) from None
     bands = scenarios.build_scenarios(sim["terminal"], sim["spot"])
 
     try:

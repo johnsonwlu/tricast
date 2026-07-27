@@ -169,12 +169,41 @@ page) classifies the actual outcome and computes a Brier score, so over time
 you learn whether the model's probabilities are actually calibrated — and
 whether they beat the naive always-25/50/25 baseline.
 
+## Written for someone new to stock picking
+
+The interface never says "P25–P75 band" or "prob. of loss" on its own. Every
+finance term is translated to an everyday phrase, with the real term kept
+alongside in small type so you pick it up, and the explanation one hover away:
+
+| On screen | Instead of |
+|---|---|
+| If things go well / Most likely / If things go poorly | bull / base / bear case |
+| Chance of losing money | probability of loss |
+| Reward for the risk | Sharpe ratio |
+| Typical bad-case loss | expected shortfall (CVaR) |
+| Swings vs market | beta |
+| Long vs short-term interest rates | yield curve (10y–2y) |
+
+Every page opens with a plain summary of what it's for, and a collapsed
+*"New here? How to read this in 30 seconds"* primer explains the model's three
+biggest caveats — that a big upside usually comes with a matching downside,
+that the simulation only knows history, and that the written commentary is an
+AI explaining the numbers rather than a source of truth.
+
+That vocabulary lives in one place (`tricast/ui.py`) and is unit-tested, since
+copy that silently inverts — calling a 4% *month* as dramatic as a 4% *day* —
+misleads a beginner just as badly as a wrong number.
+
 ## Layout
 
 ```
-app.py                    Watchlist page
-pages/                    Stock Detail (fan chart, scenario cards), Macro Regime
-tricast/                  UI-free library
+app.py                    entry point: page config + navigation
+views/                    one file per page (watchlist, stock detail,
+                          economy, track record)
+.streamlit/config.toml    theme (warm palette, rounded corners, larger text)
+tricast/
+  ui.py                   shared visual system + the plain-language vocabulary
+                          UI-free library below this line:
   config.py               every tunable knob (horizon, percentiles, tilt, model)
   store.py                SQLite cache + watchlist + saved analyses
   data/                   yfinance + FRED with incremental/TTL caching
