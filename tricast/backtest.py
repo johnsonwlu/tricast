@@ -59,11 +59,14 @@ def run_backtest(
     n_paths: int = 5_000,
     seed: int = config.RNG_SEED,
     block: int | None = None,
+    vol_scale: float | None = None,
     price_loader=_load_long_history,
 ) -> list[dict]:
     """Replay the quant engine across (ticker, as-of date) pairs. Returns one
     result row per evaluable pair. `price_loader` is injectable for testing.
-    `block` overrides the bootstrap block length (block=1 = old IID) for A/B."""
+    `block` overrides the bootstrap block length (block=1 = old IID) for A/B.
+    `vol_scale` overrides the learned dispersion multiplier (1.0 = uncorrected),
+    which is what the calibrator sweeps to fit it."""
     results = []
     for ticker in tickers:
         try:
@@ -85,7 +88,7 @@ def run_backtest(
 
             sim = montecarlo.simulate(
                 hist, analyst_target=None, horizon=horizon,
-                n_paths=n_paths, seed=seed, block=block,
+                n_paths=n_paths, seed=seed, block=block, vol_scale=vol_scale,
             )
             terminal = sim["terminal"]
             spot = sim["spot"]

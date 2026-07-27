@@ -5,7 +5,7 @@ import streamlit as st
 
 from tricast import ledger, ui
 
-ui.page_setup("📒 Prediction Ledger")
+ui.page_setup("Prediction Ledger")
 
 st.caption(
     "Every report logs its forecast here (one per ticker per day). After the "
@@ -29,7 +29,7 @@ if stats["n_scored"]:
     c[0].metric("Scored predictions", stats["n_scored"])
     c[1].metric("Mean Brier", f"{stats['mean_brier']:.3f}")
     c[2].metric("Naive baseline", f"{stats['baseline_brier']:.3f}")
-    c[3].metric("Beats baseline?", "✅ yes" if stats["beats_baseline"] else "❌ no")
+    c[3].metric("Beats baseline?", "yes" if stats["beats_baseline"] else "no")
 else:
     st.info(
         f"{len(open_preds)} open prediction(s), none matured yet — scoring starts "
@@ -77,7 +77,7 @@ if matured:
     st.dataframe(pd.DataFrame(rows), width="stretch", hide_index=True)
     st.bar_chart(pd.Series(stats["outcome_counts"], name="outcomes"))
 
-if st.button("🔄 Score matured predictions now"):
+if st.button("Score matured predictions now"):
     with st.spinner("Scoring…"):
         newly = ledger.score_matured()
     st.success(f"Scored {len(newly)} prediction(s)." if newly

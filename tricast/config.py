@@ -17,6 +17,14 @@ N_PATHS = 10_000
 RNG_SEED = 42
 BLOCK_SIZE = 21                 # block-bootstrap length (days); ~1 trading month
 DRIFT_CAP_ANNUAL = 0.25         # cap each drift component to +/-25%/yr
+# Learned dispersion correction (see calibration.py). The backtest showed the
+# 5y-lookback cone is too wide; scripts/calibrate.py fits this scalar to shrink
+# it toward calibration and writes CALIBRATION_PATH. DEFAULT is the neutral
+# fallback used until a calibration file exists.
+CALIBRATION_PATH = PROJECT_ROOT / "data" / "calibration.json"
+DEFAULT_VOL_SCALE = 1.0
+VOL_SCALE_MIN = 0.3             # sanity clamp; refuse absurd learned values
+VOL_SCALE_MAX = 2.0
 # Terminal distribution partition: below P25 = bear, P25-P75 = base, above = bull
 BAND_LOWER_PCT = 25
 BAND_UPPER_PCT = 75

@@ -5,7 +5,7 @@ import streamlit as st
 
 from tricast import macro_regime, ui
 
-ui.page_setup("🌍 Macro Regime")
+ui.page_setup("Macro Regime")
 
 try:
     macro_state = ui.cached_macro_state()
@@ -55,7 +55,7 @@ for col, sig in zip(cols, macro_state["signals"]):
         st.markdown(SIGNAL_LABEL[sig["signal"]])
         st.caption(sig["detail"])
 
-if st.button("🔄 Refresh macro data"):
+if st.button("Refresh macro data"):
     ui.cached_macro_state.clear()
     st.rerun()
 
