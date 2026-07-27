@@ -90,6 +90,25 @@ def test_advice_pill_tone_matches_meaning():
     assert "avoid" in ui.advice_pill("avoid").lower()
 
 
+def test_risk_label_stays_chip_sized():
+    """It renders inside a narrow card. The first version put a whole sentence
+    in a nowrap chip, which ran outside the panel."""
+    for label in ("strong", "fair", "weak", "poor"):
+        text, tone = ui.risk_label({"label": label, "prob_loss_pct": 30})
+        assert len(text) <= 22, f"{text!r} is too long for the chip"
+        assert len(text.split()) <= 4
+        assert tone in ui.TONES
+
+
+def test_long_pill_opts_into_wrapping():
+    assert "tc-pill-wrap" in ui.pill("a very long status sentence", wrap=True)
+    assert "tc-pill-wrap" not in ui.pill("Short")
+
+
+def test_loss_note_reads_as_a_sentence():
+    assert ui.loss_note({"prob_loss_pct": 28}) == "Loses money in 28% of simulations"
+
+
 def test_risk_sentence_tone_tracks_the_label():
     _, good = ui.risk_sentence({"label": "strong", "prob_loss_pct": 12})
     _, bad = ui.risk_sentence({"label": "poor", "prob_loss_pct": 55})
