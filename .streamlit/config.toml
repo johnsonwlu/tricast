@@ -1,0 +1,18 @@
+[theme]
+# Warm, soft, low-contrast palette: approachable rather than "trading terminal".
+base = "light"
+primaryColor = "#4A78D8"              # calm blue for buttons/focus
+backgroundColor = "#FCFBF9"           # warm off-white
+secondaryBackgroundColor = "#F4F1EC"  # soft sand for sidebar/cards
+textColor = "#2B2A28"                 # warm near-black (softer than pure black)
+linkColor = "#3A66BF"
+borderColor = "#E7E1D8"
+font = "sans serif"
+baseFontSize = 17                     # larger default text, easier to read
+baseRadius = "large"                  # rounded corners everywhere
+
+[client]
+toolbarMode = "minimal"   # hide the Deploy button; this is a personal app
+
+[server]
+runOnSave = true

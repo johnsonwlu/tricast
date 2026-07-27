@@ -66,11 +66,17 @@ def test_calibrated_on_random_walk():
     """On driftless random walks the bootstrap should be ~calibrated. This needs
     *independent* series — overlapping windows of a single path are correlated
     and one lucky realization biases the whole result. So each 'ticker' gets its
-    own fresh walk, and outcomes aggregate across independent paths."""
+    own fresh walk, and outcomes aggregate across independent paths.
+
+    vol_scale is pinned to 1.0 deliberately: this test checks the *bootstrap
+    machinery*, and these walks are IID by construction. The learned correction
+    is fit on real equities, which mean-revert over multi-day horizons — it is
+    a real property of markets, not of this synthetic data, so applying it here
+    would (correctly) shrink the cone below nominal and test nothing useful."""
     walks = {f"X{i}": _random_walk(n=2600, seed=100 + i) for i in range(80)}
     results = backtest.run_backtest(
         list(walks), start="2012-01-01", freq="6MS", n_paths=1500,
-        price_loader=lambda t: walks[t],
+        vol_scale=1.0, price_loader=lambda t: walks[t],
     )
     summary = backtest.summarize_backtest(results)
     assert summary["n"] > 150
