@@ -16,6 +16,9 @@ def _report(**overrides):
             "bull": {"target": 1020.11, "return_pct": 95.4, "prior_prob": 25},
         },
         "tilted_probabilities": {"bear": 23, "base": 50, "bull": 27},
+        "risk": {"sharpe": 0.38, "sortino": 0.51, "prob_loss_pct": 40,
+                 "cvar5_pct": 62.0, "expected_return_pct": 28.0,
+                 "volatility_pct": 65.0, "risk_free_pct": 4.3, "label": "weak"},
         "macro": {"regime": "Neutral", "score": 0.2, "signals": []},
         "fundamentals": {
             "shortName": "Advanced Micro Devices, Inc.",
@@ -78,6 +81,15 @@ def test_missing_fundamentals_stay_none_rather_than_crashing():
     assert fund["debt_to_equity_ratio"] is None
     assert fund["profit_margin_pct"] is None
     assert fund["beta"] is None
+
+
+def test_risk_metrics_reach_the_model():
+    """The whole point of the risk-adjusted score: the advice can only weigh
+    reward against risk if the risk numbers are actually in the payload."""
+    risk = pipeline._llm_payload(_report())["risk_adjusted"]
+    assert risk["sharpe"] == 0.38
+    assert risk["prob_loss_pct"] == 40
+    assert risk["cvar5_pct"] == 62.0
 
 
 def test_no_raw_yfinance_field_names_survive_into_the_payload():

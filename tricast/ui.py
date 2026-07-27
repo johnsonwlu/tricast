@@ -129,8 +129,12 @@ def _inject_css():
       .stButton > button:hover { transform: translateY(-1px); box-shadow:0 4px 12px rgba(43,42,40,.08); }
 
       /* Pills + scenario rows */
+      /* nowrap keeps short chips ("Worth buying") on one line; anything longer
+         must opt into wrapping or it overflows its card */
       .tc-pill { display:inline-block; padding:.2rem .68rem; border-radius:999px;
-                 font-size:.86rem; font-weight:650; border:1px solid; white-space:nowrap; }
+                 font-size:.86rem; font-weight:650; border:1px solid;
+                 white-space:nowrap; max-width:100%; vertical-align:top; }
+      .tc-pill-wrap { white-space:normal; overflow-wrap:anywhere; }
       .tc-row { display:flex; align-items:baseline; gap:.55rem; margin:.3rem 0; }
       .tc-row .lbl { color:#4A443E; min-width:9.5rem; }
       .tc-row .val { font-weight:650; font-variant-numeric:tabular-nums; }
@@ -144,9 +148,12 @@ def _inject_css():
     """, unsafe_allow_html=True)
 
 
-def pill(text: str, tone: str = "muted") -> str:
+def pill(text: str, tone: str = "muted", wrap: bool = False) -> str:
+    """A short status chip. Pass wrap=True for anything longer than ~3 words —
+    otherwise it stays on one line and runs outside its container."""
     t = TONES.get(tone, TONES["muted"])
-    return (f"<span class='tc-pill' style='color:{t['fg']};background:{t['bg']};"
+    cls = "tc-pill tc-pill-wrap" if wrap else "tc-pill"
+    return (f"<span class='{cls}' style='color:{t['fg']};background:{t['bg']};"
             f"border-color:{t['br']}'>{text}</span>")
 
 
@@ -235,19 +242,30 @@ def plain_advice(advice: str) -> str:
     }.get(advice, "No recommendation yet.")
 
 
-def risk_sentence(rk: dict) -> tuple[str, str]:
-    """Plain summary of the risk metrics -> (sentence, tone). `rk` is the
-    report's risk block (only present once risk scoring is merged)."""
-    tone = {"strong": "good", "fair": "calm", "weak": "caution", "poor": "poor"}
+RISK_TONES = {"strong": "good", "fair": "calm", "weak": "caution", "poor": "poor"}
+RISK_WORDS = {
+    "strong": "Good reward for risk",
+    "fair": "Fair reward for risk",
+    "weak": "Weak reward for risk",
+    "poor": "Poor reward for risk",
+}
+
+
+def risk_label(rk: dict) -> tuple[str, str]:
+    """Short chip-sized summary -> (label, tone). Kept to three words so it
+    fits a narrow watchlist card; the loss figure goes alongside as text."""
     label = rk.get("label", "fair")
-    loss = rk.get("prob_loss_pct", 0)
-    words = {
-        "strong": "Good reward for the risk",
-        "fair": "Reasonable reward for the risk",
-        "weak": "Modest reward for the risk taken",
-        "poor": "Poor reward for the risk taken",
-    }.get(label, "Reward for the risk")
-    return f"{words} · loses money in {loss:.0f}% of simulations", tone.get(label, "muted")
+    return RISK_WORDS.get(label, "Reward for risk"), RISK_TONES.get(label, "muted")
+
+
+def loss_note(rk: dict) -> str:
+    return f"Loses money in {rk.get('prob_loss_pct', 0):.0f}% of simulations"
+
+
+def risk_sentence(rk: dict) -> tuple[str, str]:
+    """Full one-line summary -> (sentence, tone), for wide layouts only."""
+    words, tone = risk_label(rk)
+    return f"{words} · {loss_note(rk).lower()}", tone
 
 
 def advice_badge(advice: str) -> str:

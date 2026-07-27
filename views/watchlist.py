@@ -153,9 +153,11 @@ else:
                                 unsafe_allow_html=True)
                 rk = report.get("risk")
                 if rk:
-                    sentence, tone = ui.risk_sentence(rk)
+                    label, tone = ui.risk_label(rk)
                     st.markdown(
-                        f"<div style='margin-top:.45rem'>{ui.pill(sentence, tone)}</div>",
+                        f"<div style='margin-top:.45rem'>"
+                        f"{ui.pill(label, tone, wrap=True)}</div>"
+                        f"<span class='tc-note'>{ui.loss_note(rk)}</span>",
                         unsafe_allow_html=True)
 
                 if st.button("See details", key=f"detail_{ticker}",

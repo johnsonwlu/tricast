@@ -68,7 +68,7 @@ if rk:
     with st.container(border=True):
         st.markdown(
             f"<span class='tc-term'>Is the reward worth the risk?</span><br>"
-            f"{ui.pill(sentence, tone)}", unsafe_allow_html=True)
+            f"{ui.pill(sentence, tone, wrap=True)}", unsafe_allow_html=True)
         rm = st.columns(4)
         rm[0].metric("Reward for the risk", f"{rk['sharpe']:.2f}",
                      help=ui.HELP["sharpe"])
