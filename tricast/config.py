@@ -26,7 +26,18 @@ CALIBRATION_PATH = PROJECT_ROOT / "data" / "calibration.json"
 DEFAULT_VOL_SCALE = 1.0
 VOL_SCALE_MIN = 0.3             # sanity clamp; refuse absurd learned values
 VOL_SCALE_MAX = 2.0
-# Terminal distribution partition: below P25 = bear, P25-P75 = base, above = bull
+# --- Scenario definition -------------------------------------------------
+# Scenarios are defined by what the RETURN actually is, not by where it sits in
+# the stock's own distribution. Partitioning at P25/P75 made every stock's
+# priors exactly 25/50/25, so the probabilities carried no information: a index
+# fund and a 2.5-beta semiconductor got identical odds. Fixed thresholds let the
+# probabilities vary with the stock -- a volatile name genuinely has a higher
+# chance of losing 10% than a diversified fund does.
+BEAR_RETURN_PCT = -10.0         # 12-month return at or below this = bear case
+BULL_RETURN_PCT = 20.0          # 12-month return at or above this = bull case
+
+# Percentile cuts, still used by the backtest to measure interval calibration
+# (the P25-P75 coverage statistic) -- a different question from scenario odds.
 BAND_LOWER_PCT = 25
 BAND_UPPER_PCT = 75
 # Representative target inside each band (median of the band)

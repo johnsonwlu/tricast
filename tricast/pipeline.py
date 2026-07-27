@@ -60,6 +60,7 @@ def build_report(ticker: str, run_llm: bool = False, db_path=config.DB_PATH) -> 
         "vol_scale": sim["vol_scale"],
         "horizon_days": sim["horizon"],
         "scenarios": bands,
+        "band_bounds": scenarios.band_bounds(sim["spot"]),
         "tilted_probabilities": tilted,
         "risk": risk_metrics,
         "macro": macro_state,

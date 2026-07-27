@@ -18,6 +18,9 @@ def make_report(ticker="TEST", probs=None, analysis=False):
             "bear": {"target": 80.0}, "base": {"target": 105.0}, "bull": {"target": 140.0},
         },
         "tilted_probabilities": probs or {"bear": 23, "base": 50, "bull": 27},
+        # scenario thresholds the forecast was made under (-10% / +20% of spot)
+        "band_bounds": {"lower_price": 90.0, "upper_price": 120.0,
+                        "lower_return_pct": -10.0, "upper_return_pct": 20.0},
         "macro": {"regime": "Neutral", "score": 0.2},
         "cone": {p: [100.0 + i for i in range(252)] for p in ("p10", "p25", "p50", "p75", "p90")},
         "analysis": None,

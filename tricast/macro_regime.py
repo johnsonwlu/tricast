@@ -98,8 +98,16 @@ def regime_label(score: float) -> str:
 
 def tilt_probabilities(priors: dict[str, int], score: float) -> dict[str, int]:
     """Shift bull/bear symmetrically by round(score * TILT_MAX_PP); base is
-    untouched, so the sum stays exactly 100 and the tilt is bounded ±10pp."""
+    untouched, so the sum stays exactly 100 and the tilt is bounded ±10pp.
+
+    The shift is truncated so neither tail can be pushed below zero. This was
+    unreachable while every stock's priors were a fixed 25/50/25, but scenario
+    probabilities now vary by stock: a stable fund can have a 4% chance of the
+    bear case, and a +10pp bullish tilt would otherwise make it negative.
+    """
     shift = round(score * config.TILT_MAX_PP)
+    shift = min(shift, priors["bear"])      # keep bear - shift >= 0
+    shift = max(shift, -priors["bull"])     # keep bull + shift >= 0
     return {
         "bear": priors["bear"] - shift,
         "base": priors["base"],

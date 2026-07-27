@@ -44,7 +44,11 @@ def record_prediction(report: dict, db_path=config.DB_PATH) -> None:
                 report["ticker"], today.isoformat(), time.time(),
                 (today + timedelta(days=365)).isoformat(),
                 report["spot"],
-                cone["p25"][-1], cone["p75"][-1],
+                # the scenario thresholds this forecast was made under, so it
+                # is scored later against the same definition (was the cone's
+                # P25/P75, which moved with the simulation rather than the claim)
+                report["band_bounds"]["lower_price"],
+                report["band_bounds"]["upper_price"],
                 report["scenarios"]["bear"]["target"],
                 report["scenarios"]["base"]["target"],
                 report["scenarios"]["bull"]["target"],
@@ -133,11 +137,10 @@ def summary(db_path=config.DB_PATH) -> dict:
 
 
 def interim_position(pred: dict, current_price: float) -> str:
-    """Which band the price is tracking in *today*, vs the cone at the
-    matching day of the forecast horizon."""
-    cone = json.loads(pred["cone_json"])
-    elapsed_cal = (date.today() - date.fromisoformat(pred["pred_date"])).days
-    idx = min(int(elapsed_cal * 252 / 365), len(cone["p25"]) - 1)
-    if idx < 0:
-        return "—"
-    return classify_outcome(current_price, cone["p25"][idx], cone["p75"][idx])
+    """Which scenario the price is tracking toward today.
+
+    Scenario boundaries are fixed prices (a -10% / +20% move from the spot at
+    forecast time), so this is the same comparison the final scoring will make
+    — just early. Previously it compared against the widening cone, which meant
+    a stock could 'move' between bands purely because time had passed."""
+    return classify_outcome(current_price, pred["band_lower"], pred["band_upper"])
